@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Manga</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-right: 1px solid #ccc;
+            overflow-y: auto;
+        }
+        .sidebar h2 {
+            margin-top: 0;
+        }
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .sidebar li {
+            margin: 5px 0;
+        }
+        .sidebar a {
+            text-decoration: none;
+            color: #333;
+            display: block;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .sidebar a.active {
+            background-color: #ddd;
+        }
+        .toggle-fun {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #aac;
+            background-color: #eef;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        #fun-chapters {
+            display: none;
+            margin-bottom: 12px;
+        }
+        .content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .page {
+            margin-bottom: 20px;
+        }
+        .page img {
+            max-width: 100%;
+            height: auto;
+        }
+        .account {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            top: auto;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .account input {
+            margin: 5px 0;
+            width: 100%;
+        }
+        .account button {
+            width: 100%;
+        }
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #fff;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .topbar button {
+            margin-left: 8px;
+        }
+        .topbar .top-left {
+            font-weight: bold;
+        }
+        .main-panel {
+            display: flex;
+            flex: 1;
+            margin-top: 60px;
+            overflow: hidden;
+        }
+        .sidebar {
+            height: calc(100vh - 60px);
+        }
+        .content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            height: calc(100vh - 60px);
+        }
+        .popup-panel {
+            position: fixed;
+            top: 70px;
+            right: 10px;
+            width: 320px;
+            max-height: calc(100vh - 90px);
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            padding: 12px;
+            z-index: 20;
+        }
+        .popup-panel h3 {
+            margin: 0 0 10px;
+        }
+        .popup-panel .user-item {
+            border-bottom: 1px solid #eee;
+            padding: 8px 0;
+        }
+        .popup-panel .user-item:last-child {
+            border-bottom: none;
+        }
+        .popup-panel button {
+            margin-right: 6px;
+            margin-top: 6px;
+        }
+        .popup-panel textarea,
+        .popup-panel input {
+            width: 100%;
+            margin-top: 6px;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .friends-list,
+        .dm-list,
+        .request-list {
+            max-height: 260px;
+            overflow-y: auto;
+        }
+        .dm-messages {
+            max-height: 220px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            padding: 8px;
+            margin-bottom: 8px;
+            background: #fafafa;
+        }
+        .dm-message {
+            margin-bottom: 8px;
+        }
+        .dm-message .sender {
+            font-weight: bold;
+        }
+        .verified {
+            color: red;
+            font-weight: bold;
+        }
+        .comments {
+            margin-top: 20px;
+        }
+        .comment {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .comment .author {
+            font-weight: bold;
+        }
+        .comment .verified::after {
+            content: " ✓";
+            color: red;
+        }
+        .comment-replies {
+            margin-left: 20px;
+            margin-top: 8px;
+            border-left: 2px solid #ddd;
+            padding-left: 10px;
+        }
+        .comment-reply {
+            border: 1px solid #eee;
+            padding: 8px;
+            margin-bottom: 6px;
+            border-radius: 3px;
+            background: #fafafa;
+        }
+        .comment-reply .author {
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .comment-reply p {
+            margin: 4px 0;
+            font-size: 0.9em;
+        }
+        .reply-btn {
+            font-size: 0.85em;
+            padding: 4px 8px;
+            margin-top: 6px;
+            cursor: pointer;
+        }
+        .reply-form {
+            display: none;
+            margin-top: 8px;
+            padding: 8px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 3px;
+        }
+        .reply-form textarea {
+            width: 100%;
+            padding: 6px;
+            box-sizing: border-box;
+            margin-bottom: 6px;
+            font-family: Arial, sans-serif;
+        }
+        .reply-form button {
+            font-size: 0.85em;
+            padding: 4px 8px;
+            margin-right: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="top-left">Whiterose Studio</div>
+        <div class="top-right">
+            <span id="top-status">Log in to use profiles, friends, and DMs.</span>
+            <button onclick="showPanel('profiles')">Profiles</button>
+            <button onclick="showPanel('friends')">Friends</button>
+            <button onclick="showPanel('dms')">DMs</button>
+        </div>
+    </div>
+    <div id="top-panel" class="popup-panel" style="display:none;"></div>
+    <div class="main-panel">
+        <div class="sidebar">
+            <button id="fun-toggle-button" class="toggle-fun" onclick="toggleFunChapters()">Show Fun Chapters</button>
+            <div id="fun-chapters">
+                <h2>Fun Chapters</h2>
+                <ul>
+                    <li><a href="#" class="tab-link" data-tab="fun1">FC 1</a></li>
+                    <li><a href="#" class="tab-link" data-tab="fun2">FC 2</a></li>
+                    <li><a href="#" class="tab-link" data-tab="fun3">FC 3</a></li>
+                </ul>
+            </div>
+            <h2>Chapters</h2>
+            <ul>
+                <li><a href="#" class="tab-link active" data-tab="introduction">Introduction</a></li>
+            </ul>
+        </div>
+        <div class="content">
+        <div id="introduction" class="tab-content">
+            <h1>Introduction</h1>
+            <div class="page">
+                <img src="INTRO1.PNG" alt="Introduction Page">
+            </div>
+            <!-- Add more pages below if you want -->
+        </div>
+        <div id="fun1" class="tab-content">
+            <h1>FC 1</h1>
+            <p>Fun chapter 1 placeholder.</p>
+        </div>
+        <div id="fun2" class="tab-content">
+            <h1>FC 2</h1>
+            <p>Fun chapter 2 placeholder.</p>
+        </div>
+        <div id="fun3" class="tab-content">
+            <h1>FC 3</h1>
+            <p>Fun chapter 3 placeholder.</p>
+        </div>
+        <div class="comments">
+            <h2>Comments</h2>
+            <div id="comment-list"></div>
+            <div id="comment-form" style="display: none;">
+                <textarea id="comment-text" placeholder="Write a comment..."></textarea>
+                <button onclick="postComment()">Post Comment</button>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="account">
+        <div id="login-form">
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <button onclick="register()">Register</button>
+        </div>
+        <div id="user-info" style="display: none;">
+            <span id="current-user"></span>
+            <button onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let currentChat = null;
+        let comments = JSON.parse(localStorage.getItem('comments')) || [];
+        let users = JSON.parse(localStorage.getItem('users')) || {};
+
+        function ensureUserData(username) {
+            if (!users[username]) {
+                users[username] = {
+                    password: '',
+                    verified: false,
+                    friends: [],
+                    requests: [],
+                    messages: {}
+                };
+            } else {
+                users[username].friends = users[username].friends || [];
+                users[username].requests = users[username].requests || [];
+                users[username].messages = users[username].messages || {};
+            }
+        }
+
+        function saveUsers() {
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        ensureUserData('Doosket');
+        users['Doosket'].password = users['Doosket'].password || 'Wyatt0630';
+        users['Doosket'].verified = true;
+        saveUsers();
+
+        function toggleFunChapters() {
+            const funChapters = document.getElementById("fun-chapters");
+            const button = document.getElementById("fun-toggle-button");
+            if (funChapters.style.display === "block") {
+                funChapters.style.display = "none";
+                button.textContent = "Show Fun Chapters";
+            } else {
+                funChapters.style.display = "block";
+                button.textContent = "Hide Fun Chapters";
+            }
+        }
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (users[username] && users[username].password === password) {
+                currentUser = username;
+                currentChat = null;
+                updateUI();
+                hideTopPanel();
+            } else {
+                alert('Invalid credentials');
+            }
+        }
+
+        function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (username && password && !users[username]) {
+                ensureUserData(username);
+                users[username].password = password;
+                users[username].verified = false;
+                saveUsers();
+                currentUser = username;
+                currentChat = null;
+                updateUI();
+                hideTopPanel();
+            } else {
+                alert('Username already exists or invalid input');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            currentChat = null;
+            updateUI();
+            hideTopPanel();
+        }
+
+        function updateUI() {
+            if (currentUser) {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('user-info').style.display = 'block';
+                document.getElementById('current-user').textContent = currentUser + (users[currentUser].verified ? ' ✓' : '');
+                document.getElementById('comment-form').style.display = 'block';
+            } else {
+                document.getElementById('login-form').style.display = 'block';
+                document.getElementById('user-info').style.display = 'none';
+                document.getElementById('comment-form').style.display = 'none';
+            }
+            updateTopStatus();
+            displayComments();
+        }
+
+        function updateTopStatus() {
+            const status = document.getElementById('top-status');
+            if (currentUser) {
+                status.textContent = `Logged in as ${currentUser}${users[currentUser].verified ? ' ✓' : ''}`;
+            } else {
+                status.textContent = 'Log in to use profiles, friends, and DMs.';
+            }
+        }
+
+        function showPanel(name) {
+            const panel = document.getElementById('top-panel');
+            if (!currentUser) {
+                alert('Log in to use profiles, friends, and DMs.');
+                return;
+            }
+            let html = `<div style="display:flex; justify-content:space-between; align-items:center;"><h3>${name === 'profiles' ? 'Profiles' : name === 'friends' ? 'Friends' : 'DMs'}</h3><button onclick="hideTopPanel()">Close</button></div>`;
+            if (name === 'profiles') {
+                html += buildUserList();
+            } else if (name === 'friends') {
+                html += buildFriendsPanel();
+            } else if (name === 'dms') {
+                html += buildDMPanel();
+            }
+            panel.innerHTML = html;
+            panel.style.display = 'block';
+        }
+
+        function hideTopPanel() {
+            const panel = document.getElementById('top-panel');
+            panel.style.display = 'none';
+            currentChat = null;
+        }
+
+        function buildUserList() {
+            const keys = Object.keys(users).sort();
+            if (!keys.length) {
+                return '<div>No users found.</div>';
+            }
+            return keys.map(name => {
+                const verified = users[name].verified ? ' ✓' : '';
+                const action = name === currentUser
+                    ? '<span>Your account</span>'
+                    : `<button onclick="openProfile('${name}')">Profile</button>${users[currentUser].friends.includes(name) ? `<button onclick="openDM('${name}')">DM</button>` : `<button onclick="sendFriendRequest('${name}')">Friend</button>`}`;
+                return `<div class="user-item"><strong>${name}${verified}</strong><div>${action}</div></div>`;
+            }).join('');
+        }
+
+        function openProfile(name) {
+            const panel = document.getElementById('top-panel');
+            const user = users[name];
+            const verified = user.verified ? ' ✓' : '';
+            const isFriend = users[currentUser].friends.includes(name);
+            const isRequested = user.requests.includes(currentUser);
+            const isIncoming = users[currentUser].requests.includes(name);
+            let actions = '';
+            if (name !== currentUser) {
+                if (isFriend) {
+                    actions += `<button onclick="openDM('${name}')">DM</button>`;
+                } else if (isIncoming) {
+                    actions += `<button onclick="respondFriendRequest('${name}', true)">Accept</button><button onclick="respondFriendRequest('${name}', false)">Decline</button>`;
+                } else if (isRequested) {
+                    actions += '<span>Friend request sent</span>';
+                } else {
+                    actions += `<button onclick="sendFriendRequest('${name}')">Send Friend Request</button>`;
+                }
+            } else {
+                actions += '<span>This is your profile.</span>';
+            }
+            panel.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><button onclick="showPanel('profiles')">Back</button><button onclick="hideTopPanel()">Close</button></div><h3>Profile: ${name}${verified}</h3><div><strong>Friends:</strong> ${user.friends.length}</div><div><strong>Requests:</strong> ${user.requests.length}</div><div style="margin-top:10px;">${actions}</div>`;
+            panel.style.display = 'block';
+        }
+
+        function sendFriendRequest(target) {
+            if (!currentUser || target === currentUser) {
+                return;
+            }
+            ensureUserData(target);
+            if (users[currentUser].friends.includes(target)) {
+                alert('Already friends.');
+                return;
+            }
+            if (users[target].requests.includes(currentUser)) {
+                alert('Friend request already sent.');
+                return;
+            }
+            users[target].requests.push(currentUser);
+            saveUsers();
+            showPanel('profiles');
+            alert('Friend request sent.');
+        }
+
+        function respondFriendRequest(name, accept) {
+            const requestIndex = users[currentUser].requests.indexOf(name);
+            if (requestIndex === -1) {
+                return;
+            }
+            users[currentUser].requests.splice(requestIndex, 1);
+            if (accept) {
+                users[currentUser].friends.push(name);
+                users[name].friends = users[name].friends || [];
+                if (!users[name].friends.includes(currentUser)) {
+                    users[name].friends.push(currentUser);
+                }
+                saveUsers();
+                alert('Friend request accepted.');
+            } else {
+                saveUsers();
+                alert('Friend request declined.');
+            }
+            showPanel('friends');
+        }
+
+        function buildFriendsPanel() {
+            const incoming = users[currentUser].requests;
+            const friends = users[currentUser].friends;
+            let html = '<h4>Incoming requests</h4>';
+            if (!incoming.length) {
+                html += '<div>No incoming friend requests.</div>';
+            } else {
+                html += incoming.map(name => `<div class="user-item"><strong>${name}</strong><div><button onclick="respondFriendRequest('${name}', true)">Accept</button><button onclick="respondFriendRequest('${name}', false)">Decline</button></div></div>`).join('');
+            }
+            html += '<h4 style="margin-top:12px;">Friends</h4>';
+            if (!friends.length) {
+                html += '<div>No friends yet.</div>';
+            } else {
+                html += friends.map(name => `<div class="user-item"><strong>${name}${users[name] && users[name].verified ? ' ✓' : ''}</strong><div><button onclick="openDM('${name}')">DM</button><button onclick="openProfile('${name}')">Profile</button></div></div>`).join('');
+            }
+            return html;
+        }
+
+        function buildDMPanel() {
+            const friends = users[currentUser].friends;
+            let html = '<h4>Your friends</h4>';
+            if (!friends.length) {
+                html += '<div>No friends to chat with.</div>';
+            } else {
+                html += friends.map(name => `<div class="user-item"><strong>${name}${users[name] && users[name].verified ? ' ✓' : ''}</strong><div><button onclick="openDM('${name}')">Open chat</button></div></div>`).join('');
+            }
+            if (currentChat) {
+                html += `<h4 style="margin-top:12px;">Chat with ${currentChat}</h4><div class="dm-messages">${getMessageHistory(currentChat)}</div><textarea id="dm-input" placeholder="Type a message..."></textarea><button onclick="sendDM()">Send</button>`;
+            }
+            return html;
+        }
+
+        function openDM(peer) {
+            currentChat = peer;
+            const panel = document.getElementById('top-panel');
+            panel.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><button onclick="showPanel('dms')">Back</button><button onclick="hideTopPanel()">Close</button></div><h3>Chat with ${peer}</h3><div class="dm-messages">${getMessageHistory(peer)}</div><textarea id="dm-input" placeholder="Type a message..."></textarea><button onclick="sendDM()">Send</button>`;
+            panel.style.display = 'block';
+        }
+
+        function sendDM() {
+            const input = document.getElementById('dm-input');
+            if (!currentChat || !input) {
+                return;
+            }
+            const text = input.value.trim();
+            if (!text) {
+                return;
+            }
+            addMessage(currentUser, currentChat, currentUser, text);
+            addMessage(currentChat, currentUser, currentUser, text);
+            saveUsers();
+            openDM(currentChat);
+        }
+
+        function addMessage(user, peer, sender, text) {
+            ensureUserData(user);
+            users[user].messages[peer] = users[user].messages[peer] || [];
+            users[user].messages[peer].push({ sender, text, time: new Date().toLocaleTimeString() });
+        }
+
+        function getMessageHistory(peer) {
+            const messages = (users[currentUser].messages[peer] || []).slice(-50);
+            if (!messages.length) {
+                return '<div>No messages yet.</div>';
+            }
+            return messages.map(msg => `<div class="dm-message"><span class="sender">${msg.sender}</span>: ${msg.text}</div>`).join('');
+        }
+
+
+
+        function postComment() {
+            const text = document.getElementById('comment-text').value;
+            if (text && currentUser) {
+                comments.push({ author: currentUser, text: text, verified: users[currentUser].verified, replies: [] });
+                localStorage.setItem('comments', JSON.stringify(comments));
+                document.getElementById('comment-text').value = '';
+                displayComments();
+            }
+        }
+
+        function displayComments() {
+            const list = document.getElementById('comment-list');
+            list.innerHTML = '';
+            comments.forEach((comment, idx) => {
+                const div = document.createElement('div');
+                div.className = 'comment';
+                div.innerHTML = `<div class="author${comment.verified ? ' verified' : ''}">${comment.author}</div><p>${comment.text}</p>`;
+                if (currentUser) {
+                    const replyBtn = document.createElement('button');
+                    replyBtn.className = 'reply-btn';
+                    replyBtn.textContent = 'Reply';
+                    replyBtn.onclick = () => toggleReplyForm(idx);
+                    div.appendChild(replyBtn);
+                }
+                if (currentUser) {
+                    const replyForm = document.createElement('div');
+                    replyForm.className = 'reply-form';
+                    replyForm.id = `reply-form-${idx}`;
+                    replyForm.innerHTML = `<textarea id="reply-text-${idx}" placeholder="Write a reply..."></textarea><button onclick="postReply(${idx})">Post Reply</button><button onclick="toggleReplyForm(${idx})">Cancel</button>`;
+                    div.appendChild(replyForm);
+                }
+                if (comment.replies && comment.replies.length > 0) {
+                    const repliesDiv = document.createElement('div');
+                    repliesDiv.className = 'comment-replies';
+                    comment.replies.forEach(reply => {
+                        const replyDiv = document.createElement('div');
+                        replyDiv.className = 'comment-reply';
+                        replyDiv.innerHTML = `<div class="author${reply.verified ? ' verified' : ''}">${reply.author}</div><p>${reply.text}</p>`;
+                        repliesDiv.appendChild(replyDiv);
+                    });
+                    div.appendChild(repliesDiv);
+                }
+                list.appendChild(div);
+            });
+        }
+
+        function toggleReplyForm(idx) {
+            const form = document.getElementById(`reply-form-${idx}`);
+            if (form) {
+                form.style.display = form.style.display === 'none' ? 'block' : 'none';
+                if (form.style.display === 'block') {
+                    document.getElementById(`reply-text-${idx}`).focus();
+                }
+            }
+        }
+
+        function postReply(idx) {
+            const text = document.getElementById(`reply-text-${idx}`).value;
+            if (text && currentUser && comments[idx]) {
+                if (!comments[idx].replies) {
+                    comments[idx].replies = [];
+                }
+                comments[idx].replies.push({ author: currentUser, text: text, verified: users[currentUser].verified });
+                localStorage.setItem('comments', JSON.stringify(comments));
+                displayComments();
+            }
+        }
+
+        document.querySelectorAll('.tab-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+                document.getElementById(this.dataset.tab).style.display = 'block';
+            });
+        });
+
+        updateUI();
+    </script>
+</body>
+</html>
